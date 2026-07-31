@@ -1,4 +1,4 @@
-﻿using ProcessMp3.Internal.Models;
+using ProcessMp3.Internal.Models;
 
 namespace ProcessMp3.Internal;
 
@@ -8,7 +8,10 @@ public sealed class BeatDetector
 
     public static BeatResult Detect(List<AudioFrame> frames, int sampleRate, int hopSize)
     {
-        if (frames.Count < 10) throw new InvalidOperationException("Not enough frames");
+        if (frames.Count < 10)
+        {
+            throw new InvalidOperationException("Not enough frames");
+        }
 
         double hopSec = hopSize / (double)sampleRate;
 
@@ -19,6 +22,11 @@ public sealed class BeatDetector
         var peaks = new List<int>();
         double maxFlux = flux.Max();
         double threshold = maxFlux * 0.15;   // tuneable
+
+        if (flux[0] > threshold)
+        {
+            peaks.Add(0);
+        }
 
         for (int i = 2; i < flux.Length - 2; i++)
         {
@@ -31,7 +39,9 @@ public sealed class BeatDetector
         }
 
         if (peaks.Count < 4)
+        {
             throw new InvalidOperationException("Too few onsets – song may have almost no percussion");
+        }
 
         // 3. Tempo estimation from the onset-strength autocorrelation.
         //
@@ -50,7 +60,9 @@ public sealed class BeatDetector
         double firstBeat = frames[peaks[0]].Time;
         var beatTimes = new List<double>();
         for (double t = firstBeat; t < frames.Last().Time; t += beatInterval)
+        {
             beatTimes.Add(t);
+        }    
 
         // 5. Bar-phase search (0..3)
         int bestPhase = 0;
@@ -61,7 +73,9 @@ public sealed class BeatDetector
         {
             var bars = new List<double>();
             for (int i = phase; i < beatTimes.Count; i += 4)
+            {
                 bars.Add(beatTimes[i]);
+            }
 
             double score = ScoreBarPhase(frames, bars, hopSec);
             if (score > bestScore)
@@ -77,8 +91,14 @@ public sealed class BeatDetector
 
     static double SnapToMusicalRange(double bpm)
     {
-        while (bpm < 60) bpm *= 2;
-        while (bpm > 180) bpm /= 2;
+        while (bpm < 60)
+        {
+            bpm *= 2;
+        }
+        while (bpm > 180)
+        {
+            bpm /= 2;
+        }
         return bpm;
     }
 
@@ -92,7 +112,9 @@ public sealed class BeatDetector
         double mean = flux.Average();
         var onset = new double[flux.Length];
         for (int i = 0; i < flux.Length; i++)
+        {
             onset[i] = Math.Max(0, flux[i] - mean);
+        }
 
         var scores = new double[maxLag + 1];
         int bestLag = minLag;
@@ -109,7 +131,10 @@ public sealed class BeatDetector
             }
 
             scores[lag] = dot / Math.Sqrt(leftEnergy * rightEnergy + 1e-20);
-            if (scores[lag] > scores[bestLag]) bestLag = lag;
+            if (scores[lag] > scores[bestLag])
+            {
+                bestLag = lag;
+            }
         }
 
         // A two-beat repetition often correlates more strongly than a single
@@ -154,7 +179,10 @@ public sealed class BeatDetector
         foreach (double t in barStarts)
         {
             int idx = (int)Math.Round(t / hopSec);
-            if (idx < 2 || idx >= frames.Count - 2) continue;
+            if (idx < 2 || idx >= frames.Count - 2)
+            {
+                continue;
+            }
 
             // Strong preference for high bass + high flux exactly on the bar line
             double bass = frames[idx].BassEnergy;

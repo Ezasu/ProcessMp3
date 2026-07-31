@@ -30,18 +30,26 @@ public static class AudioLoader
             {
                 double sum = 0;
                 for (int c = 0; c < channels; c++)
+                {
                     sum += buffer[i * channels + c];
+                }
                 mono[i] = (float)(sum / channels);
             }
         }
 
         // Optional: simple peak normalisation so RMS lives in a sensible range
         float peak = 0;
-        foreach (float s in mono) peak = Math.Max(peak, Math.Abs(s));
+        foreach (float s in mono)
+        {
+            peak = Math.Max(peak, Math.Abs(s));
+        }
         if (peak > 0)
         {
             float scale = 0.95f / peak;
-            for (int i = 0; i < mono.Length; i++) mono[i] *= scale;
+            for (int i = 0; i < mono.Length; i++)
+            {
+                mono[i] *= scale;
+            }
         }
 
         return new AudioData { Samples = mono, SampleRate = sampleRate };

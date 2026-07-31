@@ -11,18 +11,24 @@ public static class Fft
     {
         int n = buffer.Length;
         if ((n & (n - 1)) != 0)
+        {
             throw new ArgumentException("Length must be power of 2");
+        }
 
         // Bit-reversal permutation
         for (int i = 1, j = 0; i < n; i++)
         {
             int bit = n >> 1;
             for (; (j & bit) != 0; bit >>= 1)
+            {
                 j ^= bit;
+            }
             j ^= bit;
 
             if (i < j)
+            {
                 (buffer[i], buffer[j]) = (buffer[j], buffer[i]);
+            }
         }
 
         // Danielson-Lanczos
@@ -64,7 +70,9 @@ public static class Fft
         int half = fftSize / 2 + 1;
         var mag = new double[half];
         for (int i = 0; i < half; i++)
+        {
             mag[i] = buffer[i].Magnitude;
+        }
 
         return mag;
     }

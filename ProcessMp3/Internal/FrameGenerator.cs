@@ -2,7 +2,6 @@
 
 namespace ProcessMp3.Internal;
 
-// FrameGenerator.cs
 public static class FrameGenerator
 {
     public static List<AudioFrame> Generate(

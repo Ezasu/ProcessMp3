@@ -18,7 +18,10 @@ public sealed class PatternDetector
             var f = frames[i];
             var v = new List<double>();
             // skip MFCC[0] (energy)
-            for (int m = 1; m < f.MFCC.Length; m++) v.Add(f.MFCC[m]);
+            for (int m = 1; m < f.MFCC.Length; m++)
+            {
+                v.Add(f.MFCC[m]);
+            }
             v.AddRange(f.Chroma);
             v.Add(Math.Log(Math.Max(f.RMS, 1e-8)));
             v.Add(Math.Log(Math.Max(f.BassEnergy, 1e-10)));
@@ -72,7 +75,9 @@ public sealed class PatternDetector
         // Build bar times
         var barTimes = new List<double>();
         for (int i = bestOffset; i < n; i += bestLag)
+        {
             barTimes.Add(frames[i].Time);
+        }
 
         return new PatternResult(barDur, bestOffset, barTimes);
     }
@@ -87,18 +92,28 @@ public sealed class PatternDetector
         for (int d = 0; d < dim; d++)
         {
             double s = 0;
-            foreach (var v in vectors) s += v[d];
+            foreach (var v in vectors)
+            {
+                s += v[d];
+            }
             mean[d] = s / vectors.Length;
         }
         for (int d = 0; d < dim; d++)
         {
             double s = 0;
-            foreach (var v in vectors) s += (v[d] - mean[d]) * (v[d] - mean[d]);
+            foreach (var v in vectors)
+            {
+                s += (v[d] - mean[d]) * (v[d] - mean[d]);
+            }
             std[d] = Math.Sqrt(s / vectors.Length) + 1e-8;
         }
         foreach (var v in vectors)
+        {
             for (int d = 0; d < dim; d++)
+            {
                 v[d] = (v[d] - mean[d]) / std[d];
+            }
+        }
     }
 
     static double CosineSimilarity(double[] a, double[] b)

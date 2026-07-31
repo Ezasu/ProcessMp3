@@ -1,4 +1,4 @@
-﻿using ProcessMp3.Internal.Models;
+using ProcessMp3.Internal.Models;
 
 namespace ProcessMp3.Internal;
 
@@ -18,7 +18,9 @@ public static class FeatureExtractor
             // 2. RMS
             double sumSq = 0;
             foreach (float s in f.Samples)
+            {
                 sumSq += s * s;
+            }
             f.RMS = Math.Sqrt(sumSq / f.Samples.Length);
 
             // 3. Bass energy (roughly 20–150 Hz)
@@ -28,8 +30,11 @@ public static class FeatureExtractor
             (f.SpectralCentroid, f.SpectralRolloff) = SpectralCentroidAndRolloff(f.Spectrum, sampleRate, fftSize);
 
             // 5. Spectral flux
+            // The first frame is an onset relative to silence. Assigning zero
+            // here discards the only evidence available when a song starts on
+            // a downbeat and biases later bar-phase selection.
             f.SpectralFlux = prevSpectrum == null
-                ? 0
+                ? f.Spectrum.Sum()
                 : SpectralFlux(prevSpectrum, f.Spectrum);
             prevSpectrum = f.Spectrum;
 
@@ -50,7 +55,9 @@ public static class FeatureExtractor
         int i1 = Math.Min(spectrum.Length - 1, (int)(fHigh / binHz));
         double e = 0;
         for (int i = i0; i <= i1; i++)
+        {
             e += spectrum[i] * spectrum[i];
+        }
         return e;
     }
 
@@ -89,7 +96,10 @@ public static class FeatureExtractor
         for (int i = 0; i < n; i++)
         {
             double diff = curr[i] - prev[i];
-            if (diff > 0) flux += diff;          // half-wave rectified
+            if (diff > 0) 
+            { 
+                flux += diff; // half-wave rectified
+            }          
         }
         return flux;
     }
@@ -105,7 +115,9 @@ public static class FeatureExtractor
         {
             double e = 0;
             for (int k = 0; k < spectrum.Length; k++)
+            {
                 e += spectrum[k] * melFilterbank[m][k];
+            }
             logEnergies[m] = Math.Log(Math.Max(e, 1e-10));
         }
 
@@ -115,7 +127,9 @@ public static class FeatureExtractor
         {
             double sum = 0;
             for (int m = 0; m < numFilters; m++)
+            {
                 sum += logEnergies[m] * Math.Cos(Math.PI * i * (m + 0.5) / numFilters);
+            }
             mfcc[i] = sum;
         }
         return mfcc;
@@ -128,22 +142,34 @@ public static class FeatureExtractor
         double melMax = HzToMel(fMax);
         var melPoints = new double[numFilters + 2];
         for (int i = 0; i < melPoints.Length; i++)
+        {
             melPoints[i] = melMin + i * (melMax - melMin) / (numFilters + 1);
+        }
 
         var binPoints = new int[melPoints.Length];
         for (int i = 0; i < melPoints.Length; i++)
+        {
             binPoints[i] = (int)Math.Floor((fftSize + 1) * MelToHz(melPoints[i]) / sr);
+        }
 
         var filterbank = new double[numFilters][];
         for (int m = 0; m < numFilters; m++)
         {
             filterbank[m] = new double[spectrumSize];
             for (int k = binPoints[m]; k < binPoints[m + 1]; k++)
+            {
                 if (k < spectrumSize)
+                {
                     filterbank[m][k] = (k - binPoints[m]) / (double)(binPoints[m + 1] - binPoints[m]);
+                }
+            }
             for (int k = binPoints[m + 1]; k < binPoints[m + 2]; k++)
+            {
                 if (k < spectrumSize)
+                {
                     filterbank[m][k] = (binPoints[m + 2] - k) / (double)(binPoints[m + 2] - binPoints[m + 1]);
+                }
+            }
         }
         return filterbank;
     }
@@ -160,7 +186,10 @@ public static class FeatureExtractor
         for (int i = 1; i < spectrum.Length; i++)   // skip DC
         {
             double freq = i * binHz;
-            if (freq < 20 || freq > 5000) continue;
+            if (freq < 20 || freq > 5000)
+            {
+                continue;
+            }
 
             // MIDI note number
             double midi = 69 + 12 * Math.Log2(freq / 440.0);
@@ -171,7 +200,12 @@ public static class FeatureExtractor
         // L2 normalize
         double norm = Math.Sqrt(chroma.Sum(x => x * x));
         if (norm > 0)
-            for (int i = 0; i < 12; i++) chroma[i] /= norm;
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                chroma[i] /= norm;
+            }
+        }
 
         return chroma;
     }
