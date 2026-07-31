@@ -78,8 +78,7 @@
               "RelativeToolTip": "Internal\\PatternDetector.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAA7AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T15:09:06.742Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T15:09:06.742Z"
             },
             {
               "$type": "Document",
@@ -91,8 +90,7 @@
               "RelativeToolTip": "Internal\\BeatDetector.cs",
               "ViewState": "AgIAAEIAAAAAAAAAAAAowGMAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T15:08:05.475Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T15:08:05.475Z"
             },
             {
               "$type": "Document",
@@ -104,8 +102,7 @@
               "RelativeToolTip": "Internal\\Fft.cs",
               "ViewState": "AgIAACgAAAAAAAAAAAAgwDgAAABMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:52:48.067Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:52:48.067Z"
             },
             {
               "$type": "Document",
@@ -117,8 +114,7 @@
               "RelativeToolTip": "Internal\\FrameGenerator.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:51:52.657Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:51:52.657Z"
             },
             {
               "$type": "Document",
@@ -130,8 +126,7 @@
               "RelativeToolTip": "Internal\\AudioLoader.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:51:22.634Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:51:22.634Z"
             },
             {
               "$type": "Document",
@@ -143,8 +138,7 @@
               "RelativeToolTip": "Internal\\Models\\AudioData.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:50:34.415Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:50:34.415Z"
             },
             {
               "$type": "Document",
@@ -156,21 +150,19 @@
               "RelativeToolTip": "Internal\\Models\\AudioFrame.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:39:43.87Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:39:43.87Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 8,
-              "Title": "ProcessMp3",
+              "Title": "ProcessMp3.csproj",
               "DocumentMoniker": "G:\\_game_dev\\RythmGame\\ProcessMp3\\ProcessMp3\\ProcessMp3.csproj",
               "RelativeDocumentMoniker": "ProcessMp3.csproj",
               "ToolTip": "G:\\_game_dev\\RythmGame\\ProcessMp3\\ProcessMp3\\ProcessMp3.csproj",
               "RelativeToolTip": "ProcessMp3.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-07-31T14:38:36.125Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:38:36.125Z"
             },
             {
               "$type": "Document",
@@ -182,8 +174,7 @@
               "RelativeToolTip": "..\\Starter\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:38:04.314Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:38:04.314Z"
             },
             {
               "$type": "Document",
@@ -195,8 +186,7 @@
               "RelativeToolTip": "Internal\\FeatureExtractor.cs",
               "ViewState": "AgIAAKAAAAAAAAAAAAAAAJYAAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-31T14:53:25.44Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-31T14:53:25.44Z"
             }
           ]
         }
