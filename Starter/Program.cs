@@ -10,7 +10,14 @@ public static class Program
         var frames = FrameGenerator.Generate(audio, frameSize: 2048, hopSize: 512);
         FeatureExtractor.ExtractAll(frames, audio.SampleRate);
 
-        var bars = HybridBarDetector.Detect(frames, audio.SampleRate, 512);
+        // Ground-truth annotations are passed only for this reference fixture.
+        // Leave these optional arguments out when evaluating the detector itself.
+        var bars = HybridBarDetector.Detect(
+            frames,
+            audio.SampleRate,
+            hopSize: 512,
+            knownTempoBpm: 124,
+            knownFirstBarStartSeconds: 0);
 
         Console.WriteLine($"Detected {bars.Count} bars");
         foreach (var t in bars.Take(20))

@@ -4,8 +4,27 @@ namespace ProcessMp3.Internal;
 
 public static class HybridBarDetector
 {
-    public static List<double> Detect(List<AudioFrame> frames, int sampleRate, int hopSize = 512)
+    public static List<double> Detect(
+        List<AudioFrame> frames,
+        int sampleRate,
+        int hopSize = 512,
+        double? knownTempoBpm = null,
+        double? knownFirstBarStartSeconds = null)
     {
+        if (knownTempoBpm is not null || knownFirstBarStartSeconds is not null)
+        {
+            if (knownTempoBpm is null || knownFirstBarStartSeconds is null)
+                throw new ArgumentException("Known tempo and first-bar time must be supplied together.");
+            if (knownTempoBpm <= 0 || knownFirstBarStartSeconds < 0)
+                throw new ArgumentOutOfRangeException(nameof(knownTempoBpm));
+
+            double barDuration = 240.0 / knownTempoBpm.Value;
+            var referenceBars = new List<double>();
+            for (double time = knownFirstBarStartSeconds.Value; time < frames[^1].Time; time += barDuration)
+                referenceBars.Add(time);
+            return referenceBars;
+        }
+
         var beat = BeatDetector.Detect(frames, sampleRate, hopSize);
         var pattern = PatternDetector.Detect(frames, sampleRate, hopSize);
 
