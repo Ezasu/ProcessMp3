@@ -1,0 +1,12 @@
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.GeneratedMSBuildEditorConfig.editorconfig
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.AssemblyInfoInputs.cache
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.AssemblyInfo.cs
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.csproj.CoreCompileInputs.cache
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.csproj.AssemblyReference.cache
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\bin\Debug\net8.0\ProcessMp3.deps.json
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\bin\Debug\net8.0\ProcessMp3.dll
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\bin\Debug\net8.0\ProcessMp3.pdb
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.dll
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\refint\ProcessMp3.dll
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ProcessMp3.pdb
+G:\_game_dev\RythmGame\ProcessMp3\ProcessMp3\obj\Debug\net8.0\ref\ProcessMp3.dll
