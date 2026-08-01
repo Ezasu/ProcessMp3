@@ -172,17 +172,32 @@ public static class GlobalMusicalAlignment
 
             //double total = 0.30 * beatAlignment + 0.25 * onset + 0.25 * boundary + 0.20 * repeat - 0.15 * silencePenalty;
             //scores.Add(new CandidateScore(candidate, total, beatAlignment, onset, boundary, repeat, silencePenalty));
-            scores.Add(
-                new CandidateScore(
-                    candidate,
-                    total,
-                    beatAlignment,
-                    onset,
-                    boundary,
-                    repeat,
-                    silencePenalty,
-                    futureConsistency,
-                    startPenalty));
+            var score = new CandidateScore(
+                candidate,
+                total,
+                beatAlignment,
+                onset,
+                boundary,
+                repeat,
+                silencePenalty,
+                futureConsistency,
+                startPenalty);
+
+            scores.Add(score);
+
+            if (options.DebugOutput)
+            {
+                Console.WriteLine(
+                    $"Alignment candidate {score.OffsetSeconds:F3} s: " +
+                    $"score={score.TotalScore:F3}, " +
+                    $"beat={score.BeatAlignment:F3}, " +
+                    $"onset={score.OnsetStrength:F3}, " +
+                    $"boundary={score.BoundaryStrength:F3}, " +
+                    $"repeat={score.RepeatedSimilarity:F3}, " +
+                    $"silencePenalty={score.SilencePenalty:F3}, " +
+                    $"future={score.FutureConsistency:F3}, " +
+                    $"delay={score.DelayPenalty:F3}");
+            }
 
             //if (options.PrintScoreBreakdown)
             //{
