@@ -47,6 +47,7 @@ public static class GlobalMusicalAlignment
     }
 
     public record CandidateScore(
+        double RawScore,
         double OffsetSeconds,
         double TotalScore,
         double BeatAlignment,
@@ -175,6 +176,7 @@ public static class GlobalMusicalAlignment
             var score = new CandidateScore(
                 candidate,
                 total,
+                rawScore,
                 beatAlignment,
                 onset,
                 boundary,
@@ -188,15 +190,16 @@ public static class GlobalMusicalAlignment
             if (options.DebugOutput)
             {
                 Console.WriteLine(
-                    $"Alignment candidate {score.OffsetSeconds:F3} s: " +
-                    $"score={score.TotalScore:F3}, " +
+                    $"Alignment candidate {score.OffsetSeconds:F3}s: " +
+                    $"total={score.TotalScore:F3}, " +
+                    $"raw={score.RawScore:F3}, " +
+                    $"future={score.FutureConsistency:F3}, " +
+                    $"delay={score.DelayPenalty:F3}, " +
                     $"beat={score.BeatAlignment:F3}, " +
                     $"onset={score.OnsetStrength:F3}, " +
                     $"boundary={score.BoundaryStrength:F3}, " +
                     $"repeat={score.RepeatedSimilarity:F3}, " +
-                    $"silencePenalty={score.SilencePenalty:F3}, " +
-                    $"future={score.FutureConsistency:F3}, " +
-                    $"delay={score.DelayPenalty:F3}");
+                    $"silence={score.SilencePenalty:F3}");
             }
 
             //if (options.PrintScoreBreakdown)
