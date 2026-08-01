@@ -11,6 +11,15 @@ public static class GlobalMusicalAlignment
     public sealed record Options(
         int BarsPerPhrase = 4,
         int BeatsPerBar = 4,
+
+        double BeatWeight = 0.10,
+        double OnsetWeight = 0.20,
+        double BoundaryWeight = 0.25,
+        double RepeatWeight = 0.35,
+        double EarlyStartWeight = 0.20,
+        double SilencePenalty = 0.02,
+
+        bool PrintScoreBreakdown = false,
         bool DebugOutput = false)
     {
         public void Validate()
@@ -18,6 +27,18 @@ public static class GlobalMusicalAlignment
             if (BarsPerPhrase <= 0) throw new ArgumentOutOfRangeException(nameof(BarsPerPhrase));
             if (BeatsPerBar <= 0) throw new ArgumentOutOfRangeException(nameof(BeatsPerBar));
         }
+
+        public static Options Default =>
+        new(
+            BarsPerPhrase: 4,
+            BeatsPerBar: 4,
+            BeatWeight: 0.10,
+            OnsetWeight: 0.15,
+            BoundaryWeight: 0.30,
+            RepeatWeight: 0.35,
+            EarlyStartWeight: 0.10,
+            DebugOutput: true
+        );
     }
 
     public record CandidateScore(
@@ -44,6 +65,7 @@ public static class GlobalMusicalAlignment
     {
         options ??= new Options();
         options.Validate();
+
         if (frames.Count == 0 || detectedBars.Count == 0 || beatDurationSeconds <= 0 || hopSeconds <= 0)
             return new AlignmentResult(detectedBars.FirstOrDefault(), 0, detectedBars.FirstOrDefault(), []);
 
@@ -63,9 +85,16 @@ public static class GlobalMusicalAlignment
 
         // Trace only phrase-aligned positions backwards, while retaining both
         // the current detector result and the file start as safe candidates.
-        var candidates = new SortedSet<double> { 0, detectedBars[0] };
-        for (double time = anchor; time >= 0; time -= phraseDuration)
-            candidates.Add(Math.Max(0, time));
+
+        var candidates = GeneratePhaseCandidates(
+            anchor,
+            phraseDuration,
+            songEnd,
+            hopSeconds);
+
+        //var candidates = new SortedSet<double> { 0, detectedBars[0] };
+        //for (double time = anchor; time >= 0; time -= phraseDuration)
+        //    candidates.Add(Math.Max(0, time));
 
         var candidateList = candidates.ToList();
         var onsetStrength = frames.Select(frame => Math.Log(1 + Math.Max(0, frame.SpectralFlux)) +
@@ -82,8 +111,30 @@ public static class GlobalMusicalAlignment
             double repeat = SimilarityToLater(
                 BuildDescriptor(frames, candidate, phraseDuration), candidate, phraseStarts, descriptors, phraseDuration);
             double silencePenalty = 1 - Normalize(localEnergy[index], localEnergy);
-            double total = 0.30 * beatAlignment + 0.25 * onset + 0.25 * boundary + 0.20 * repeat - 0.15 * silencePenalty;
+            double earlyPreference = 1.0 - Math.Min(candidate / 5.0, 1.0);
+
+            double total =
+                options.BeatWeight * beatAlignment +
+                options.OnsetWeight * onset +
+                options.BoundaryWeight * boundary +
+                options.RepeatWeight * repeat -
+                options.SilencePenalty * silencePenalty +
+                options.EarlyStartWeight * earlyPreference;
+
+            //double total = 0.30 * beatAlignment + 0.25 * onset + 0.25 * boundary + 0.20 * repeat - 0.15 * silencePenalty;
             scores.Add(new CandidateScore(candidate, total, beatAlignment, onset, boundary, repeat, silencePenalty));
+
+            if (options.PrintScoreBreakdown)
+            {
+                Console.WriteLine(
+                   $"{candidate:F3}: " +
+                   $"beat={beatAlignment:F2} " +
+                   $"onset={onset:F2} " +
+                   $"boundary={boundary:F2} " +
+                   $"repeat={repeat:F2} " +
+                   $"early={earlyPreference:F2} " +
+                   $"total={total:F3}");
+            }
         }
 
         CandidateScore winner = scores.MaxBy(score => score.TotalScore)!;
@@ -100,7 +151,28 @@ public static class GlobalMusicalAlignment
             Console.WriteLine($"Alignment selected offset: {winner.OffsetSeconds:F3} s");
         }
 
+
         return new AlignmentResult(winner.OffsetSeconds, winner.TotalScore, anchor, scores);
+    }
+
+    private static SortedSet<double> GeneratePhaseCandidates(double anchor, double phraseDuration, double songEnd, double hopSeconds)
+    {
+        var candidates = new SortedSet<double>();
+
+        // Always include the actual file beginning
+        candidates.Add(0);
+
+        // Search possible musical phase offsets near the beginning
+        double searchWindow = 5.0;
+
+        for (double t = 0; t <= searchWindow; t += hopSeconds)
+            candidates.Add(Math.Round(t, 3));
+
+        // Existing phrase-backtracking candidates
+        for (double t = anchor; t >= 0; t -= phraseDuration)
+            candidates.Add(Math.Max(0, Math.Round(t, 3)));
+
+        return candidates;
     }
 
     private static double FindStrongestAnchor(List<double> starts, double[][] descriptors, double phraseDuration)

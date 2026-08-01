@@ -126,7 +126,7 @@ public static class HybridBarDetector
             bars,
             beat.BeatIntervalSec,
             hopSec,
-            new GlobalMusicalAlignment.Options(barsPerPhrase, beatsPerBar, debugOutput));
+            GlobalMusicalAlignment.Options.Default);
 
         double alignedBarDuration = beat.BeatIntervalSec * beatsPerBar;
         var alignedBars = new List<double>();
