@@ -1,4 +1,4 @@
-﻿using ProcessMp3.Internal.Models;
+using ProcessMp3.Internal.Models;
 
 namespace ProcessMp3.Internal;
 
@@ -6,8 +6,9 @@ public sealed class PatternDetector
 {
     public record PatternResult(double EstimatedBarDurationSec, int BestOffsetFrames, List<double> BarStartTimes);
 
-    public static PatternResult Detect(List<AudioFrame> frames, int sampleRate, int hopSize)
+    public static PatternResult Detect(List<AudioFrame> frames, int sampleRate, int hopSize, int beatsPerBar = 4)
     {
+        if (beatsPerBar <= 0) throw new ArgumentOutOfRangeException(nameof(beatsPerBar));
         double hopSec = hopSize / (double)sampleRate;
         int n = frames.Count;
 
@@ -31,10 +32,9 @@ public sealed class PatternDetector
         // Normalise each dimension
         NormaliseColumns(vectors);
 
-        // Search candidate bar lengths (in frames) for 4/4 at 60-180 BPM
-        // 1 bar = 4 beats → duration 1.33 s … 4 s
-        int minLag = (int)(1.3 / hopSec);
-        int maxLag = (int)(4.0 / hopSec);
+        // Search bar lengths at 60-180 BPM for the configured meter.
+        int minLag = Math.Max(1, (int)(beatsPerBar * 60.0 / 180.0 / hopSec));
+        int maxLag = Math.Max(minLag, (int)(beatsPerBar * 60.0 / 60.0 / hopSec));
 
         double bestCorr = double.MinValue;
         int bestLag = minLag;

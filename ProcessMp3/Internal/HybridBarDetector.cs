@@ -4,21 +4,32 @@ namespace ProcessMp3.Internal;
 
 public static class HybridBarDetector
 {
-    public static List<double> Detect(List<AudioFrame> frames, int sampleRate, int hopSize = 512, int barsPerPhrase = 4) => Detect(frames, sampleRate, out _, hopSize, barsPerPhrase);
+    public static List<double> Detect(
+        List<AudioFrame> frames,
+        int sampleRate,
+        int hopSize = 512,
+        int barsPerPhrase = 4,
+        int beatsPerBar = 4,
+        bool debugOutput = false) => Detect(frames, sampleRate, out _, hopSize, barsPerPhrase, beatsPerBar, debugOutput);
 
     public static List<double> Detect(
         List<AudioFrame> frames,
         int sampleRate,
         out double bpm,
         int hopSize = 512,
-        int barsPerPhrase = 4)
+        int barsPerPhrase = 4,
+        int beatsPerBar = 4,
+        bool debugOutput = false)
     {
-        var beat = BeatDetector.Detect(frames, sampleRate, hopSize);
+        if (barsPerPhrase <= 0) throw new ArgumentOutOfRangeException(nameof(barsPerPhrase));
+        if (beatsPerBar <= 0) throw new ArgumentOutOfRangeException(nameof(beatsPerBar));
+
+        var beat = BeatDetector.Detect(frames, sampleRate, hopSize, beatsPerBar);
         bpm = beat.Bpm;
-        var pattern = PatternDetector.Detect(frames, sampleRate, hopSize);
+        var pattern = PatternDetector.Detect(frames, sampleRate, hopSize, beatsPerBar);
 
         double hopSec = hopSize / (double)sampleRate;
-        double beatBarDur = beat.BeatIntervalSec * 4.0;
+        double beatBarDur = beat.BeatIntervalSec * beatsPerBar;
         double ratio = pattern.EstimatedBarDurationSec / beatBarDur;
 
         List<double> bars;
@@ -27,21 +38,21 @@ public static class HybridBarDetector
         {
             // Convert pattern offset into a beat-phase (0..3)
             double patternOffsetSec = pattern.BestOffsetFrames * hopSec;
-            int phase = (int)Math.Round(patternOffsetSec / beat.BeatIntervalSec) % 4;
+            int phase = (int)Math.Round(patternOffsetSec / beat.BeatIntervalSec) % beatsPerBar;
             if (phase < 0)
             {
-                phase += 4;
+                phase += beatsPerBar;
             }
 
-            // Evaluate all 4 phases and keep the best
+            // Evaluate all beat phases and keep the best
             double bestScore = double.MinValue;
             int bestPhase = phase;
             double[] boundaryEvidence = BuildBoundaryEvidence(frames);
 
-            for (int p = 0; p < 4; p++)
+            for (int p = 0; p < beatsPerBar; p++)
             {
                 var candidate = new List<double>();
-                for (int i = p; i < beat.BeatTimes.Count; i += 4)
+                for (int i = p; i < beat.BeatTimes.Count; i += beatsPerBar)
                 {
                     candidate.Add(beat.BeatTimes[i]);
                 }
@@ -55,7 +66,7 @@ public static class HybridBarDetector
             }
 
             bars = new List<double>();
-            for (int i = bestPhase; i < beat.BeatTimes.Count; i += 4)
+            for (int i = bestPhase; i < beat.BeatTimes.Count; i += beatsPerBar)
             {
                 bars.Add(beat.BeatTimes[i]);
             }
@@ -71,7 +82,7 @@ public static class HybridBarDetector
         {
             double barDur = bars.Count > 1
                 ? bars[1] - bars[0]
-                : beat.BeatIntervalSec * 4.0;
+                : beat.BeatIntervalSec * beatsPerBar;
 
             var zeroBased = new List<double>();
             for (double t = 0.0; t < frames[^1].Time; t += barDur)
@@ -98,7 +109,7 @@ public static class HybridBarDetector
         double nearestBpm = Math.Round(beat.Bpm);
         if (Math.Abs(beat.Bpm - nearestBpm) <= 0.20 && bars.Count > 0)
         {
-            double regularizedBarDuration = 240.0 / nearestBpm;
+            double regularizedBarDuration = 60.0 * beatsPerBar / nearestBpm;
             double firstBar = bars[0];
             var regularizedBars = new List<double>();
             for (double time = firstBar; time < frames[^1].Time; time += regularizedBarDuration)
@@ -115,9 +126,9 @@ public static class HybridBarDetector
             bars,
             beat.BeatIntervalSec,
             hopSec,
-            new GlobalMusicalAlignment.Options(barsPerPhrase));
+            new GlobalMusicalAlignment.Options(barsPerPhrase, beatsPerBar, debugOutput));
 
-        double alignedBarDuration = beat.BeatIntervalSec * 4.0;
+        double alignedBarDuration = beat.BeatIntervalSec * beatsPerBar;
         var alignedBars = new List<double>();
         for (double time = alignment.OffsetSeconds; time < frames[^1].Time; time += alignedBarDuration)
         {

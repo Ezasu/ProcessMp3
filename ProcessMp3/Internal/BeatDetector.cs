@@ -4,10 +4,11 @@ namespace ProcessMp3.Internal;
 
 public sealed class BeatDetector
 {
-    public record BeatResult(double Bpm, double BeatIntervalSec, List<double> BeatTimes, int BestBarPhase /* 0..3 */, List<double> BarStartTimes);
+    public record BeatResult(double Bpm, double BeatIntervalSec, List<double> BeatTimes, int BestBarPhase, List<double> BarStartTimes);
 
-    public static BeatResult Detect(List<AudioFrame> frames, int sampleRate, int hopSize)
+    public static BeatResult Detect(List<AudioFrame> frames, int sampleRate, int hopSize, int beatsPerBar = 4)
     {
+        if (beatsPerBar <= 0) throw new ArgumentOutOfRangeException(nameof(beatsPerBar));
         if (frames.Count < 10)
         {
             throw new InvalidOperationException("Not enough frames");
@@ -64,15 +65,15 @@ public sealed class BeatDetector
             beatTimes.Add(t);
         }    
 
-        // 5. Bar-phase search (0..3)
+        // 5. Bar-phase search
         int bestPhase = 0;
         double bestScore = double.MinValue;
         var bestBars = new List<double>();
 
-        for (int phase = 0; phase < 4; phase++)
+        for (int phase = 0; phase < beatsPerBar; phase++)
         {
             var bars = new List<double>();
-            for (int i = phase; i < beatTimes.Count; i += 4)
+            for (int i = phase; i < beatTimes.Count; i += beatsPerBar)
             {
                 bars.Add(beatTimes[i]);
             }
