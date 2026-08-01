@@ -4,10 +4,14 @@ namespace ProcessMp3.Internal;
 
 public static class HybridBarDetector
 {
-    public static List<double> Detect(List<AudioFrame> frames, int sampleRate, int hopSize = 512)
-        => Detect(frames, sampleRate, out _, hopSize);
+    public static List<double> Detect(List<AudioFrame> frames, int sampleRate, int hopSize = 512, int barsPerPhrase = 4) => Detect(frames, sampleRate, out _, hopSize, barsPerPhrase);
 
-    public static List<double> Detect(List<AudioFrame> frames, int sampleRate, out double bpm, int hopSize = 512)
+    public static List<double> Detect(
+        List<AudioFrame> frames,
+        int sampleRate,
+        out double bpm,
+        int hopSize = 512,
+        int barsPerPhrase = 4)
     {
         var beat = BeatDetector.Detect(frames, sampleRate, hopSize);
         bpm = beat.Bpm;
@@ -103,6 +107,24 @@ public static class HybridBarDetector
             }
             bars = regularizedBars;
         }
+
+        // Preserve the existing local BPM/bar detector and refine only the
+        // reported grid origin using full-song structural evidence.
+        var alignment = GlobalMusicalAlignment.FindOffset(
+            frames,
+            bars,
+            beat.BeatIntervalSec,
+            hopSec,
+            new GlobalMusicalAlignment.Options(barsPerPhrase));
+
+        double alignedBarDuration = beat.BeatIntervalSec * 4.0;
+        var alignedBars = new List<double>();
+        for (double time = alignment.OffsetSeconds; time < frames[^1].Time; time += alignedBarDuration)
+        {
+            alignedBars.Add(time);
+        }
+        bars = alignedBars;
+
         return bars;
     }
 

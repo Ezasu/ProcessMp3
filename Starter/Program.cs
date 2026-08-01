@@ -6,7 +6,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var audio = AudioLoader.LoadMono("G:\\_game_dev\\RythmGame\\ProcessMp3\\Test_Songs\\telepath.mp3");
+        var audio = AudioLoader.LoadMono("G:\\_game_dev\\RythmGame\\ProcessMp3\\Test_Songs\\oda.mp3");
         var frames = FrameGenerator.Generate(audio, frameSize: 2048, hopSize: 512);
         FeatureExtractor.ExtractAll(frames, audio.SampleRate);
 
