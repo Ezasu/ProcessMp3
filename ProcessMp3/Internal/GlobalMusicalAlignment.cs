@@ -1,6 +1,4 @@
 using ProcessMp3.Internal.Models;
-using System.Text.RegularExpressions;
-using System;
 
 namespace ProcessMp3.Internal;
 
@@ -13,7 +11,7 @@ public static class GlobalMusicalAlignment
     public sealed record Options(
         int BarsPerPhrase = 4,
         int BeatsPerBar = 4,
-        double BeatWeight = 0.10,
+        double BeatWeight = 0.175,
         double OnsetWeight = 0.20,
         double BoundaryWeight = 0.25,
         double RepeatWeight = 0.35,
@@ -37,7 +35,7 @@ public static class GlobalMusicalAlignment
         new(
             BarsPerPhrase: 4,
             BeatsPerBar: 4,
-            BeatWeight: 0.10,
+            BeatWeight: 0.175,
             OnsetWeight: 0.15,
             BoundaryWeight: 0.30,
             RepeatWeight: 0.35,
@@ -100,10 +98,6 @@ public static class GlobalMusicalAlignment
             songEnd,
             hopSeconds);
 
-        //var candidates = new SortedSet<double> { 0, detectedBars[0] };
-        //for (double time = anchor; time >= 0; time -= phraseDuration)
-        //    candidates.Add(Math.Max(0, time));
-
         var candidateList = candidates.ToList();
         var onsetStrength = frames.Select(frame => Math.Log(1 + Math.Max(0, frame.SpectralFlux)) +
             Math.Log(1 + Math.Max(0, frame.BassEnergy))).ToArray();
@@ -114,12 +108,30 @@ public static class GlobalMusicalAlignment
         foreach (var (candidate, index) in candidateList.Select((value, index) => (value, index)))
         {
             double beatAlignment = GridAlignment(candidate, detectedBars[0], barDuration, beatDurationSeconds);
+            //double beatAlignment = BestGridAlignment(candidate, detectedBars, barDuration, beatDurationSeconds);
             double onset = LocalPeak(onsetStrength, TimeToIndex(candidate, hopSeconds), radius: 2);
             double boundary = Normalize(boundaryChanges[index], boundaryChanges);
             double repeat = SimilarityToLater(
                 BuildDescriptor(frames, candidate, phraseDuration), candidate, phraseStarts, descriptors, phraseDuration);
             double silencePenalty = 1 - Normalize(localEnergy[index], localEnergy);
             double earlyPreference = 1.0 - Math.Min(candidate / 5.0, 1.0);
+
+            double beatContribution = options.BeatWeight * beatAlignment;
+            double onsetContribution = options.OnsetWeight * onset;
+            double boundaryContribution = options.BoundaryWeight * boundary;
+            double repeatContribution = options.RepeatWeight * repeat;
+            double silenceContribution = 0.02 * silencePenalty;
+
+            if (options.DebugOutput)
+            {
+                Console.WriteLine(
+                $"candidate={candidate:F3} " +
+                $"beat={beatContribution:F3} " +
+                $"onset={onsetContribution:F3} " +
+                $"boundary={boundaryContribution:F3} " +
+                $"repeat={repeatContribution:F3} " +
+                $"silence=-{silenceContribution:F3}");
+            }
 
             double rawScore =
                 options.BeatWeight * beatAlignment +
@@ -156,9 +168,6 @@ public static class GlobalMusicalAlignment
 
                 if (options.DebugOutput)
                 {
-                    Console.WriteLine(
-                        $"future={futureConsistency:F3}, " +
-                        $"delayPenalty={startPenalty:F3}");
 
                     Console.WriteLine(
                         $"Alignment candidate {candidate:F3}s: " +
@@ -167,16 +176,18 @@ public static class GlobalMusicalAlignment
                         $"onset={onset:F3}, " +
                         $"boundary={boundary:F3}, " +
                         $"repeat={repeat:F3}, " +
-                        $"future={futureConsistency:F3}");
+                        $"future={futureConsistency:F3}" +
+                        $"future={futureConsistency:F3}, " +
+                        $"delayPenalty={startPenalty:F3}" +
+                        $"detected first bar={detectedBars[0]:F3}" +
+                        $"BeatWeight = {options.BeatWeight}");
                 }
             }
 
-            //double total = 0.30 * beatAlignment + 0.25 * onset + 0.25 * boundary + 0.20 * repeat - 0.15 * silencePenalty;
-            //scores.Add(new CandidateScore(candidate, total, beatAlignment, onset, boundary, repeat, silencePenalty));
             var score = new CandidateScore(
+                rawScore,
                 candidate,
                 total,
-                rawScore,
                 beatAlignment,
                 onset,
                 boundary,
@@ -201,28 +212,6 @@ public static class GlobalMusicalAlignment
                     $"repeat={score.RepeatedSimilarity:F3}, " +
                     $"silence={score.SilencePenalty:F3}");
             }
-
-            //if (options.PrintScoreBreakdown)
-            //{
-            //    Console.WriteLine(
-            //       $"{candidate:F3}: " +
-            //       $"beat={beatAlignment:F2} " +
-            //       $"onset={onset:F2} " +
-            //       $"boundary={boundary:F2} " +
-            //       $"repeat={repeat:F2} " +
-            //       $"early={earlyPreference:F2} " +
-            //       $"total={total:F3}");
-            //}
-
-            //Console.WriteLine(
-            //    $"Alignment candidate {candidate:F3}s: " +
-            //    $"score={total:F3}, " +
-            //    $"beat={beatAlignment:F3}, " +
-            //    $"onset={onset:F3}, " +
-            //    $"boundary={boundary:F3}, " +
-            //    $"repeat={repeat:F3}");
-
-
         }
 
         CandidateScore winner = scores.MaxBy(score => score.TotalScore)!;
@@ -254,11 +243,18 @@ public static class GlobalMusicalAlignment
         double searchWindow = 5.0;
 
         for (double t = 0; t <= searchWindow; t += hopSeconds)
-            candidates.Add(Math.Round(t, 3));
+        {
+            if (t >= 0)
+            {
+                candidates.Add(Math.Round(t, 3));
+            }
+        }
 
         // Existing phrase-backtracking candidates
         for (double t = anchor; t >= 0; t -= phraseDuration)
+        {
             candidates.Add(Math.Max(0, Math.Round(t, 3)));
+        }
 
         return candidates;
     }
@@ -329,6 +325,24 @@ public static class GlobalMusicalAlignment
         double distance = Math.Min(remainder, barDuration - remainder);
         double tolerance = Math.Max(beatDuration * 0.12, 0.025);
         return Math.Exp(-0.5 * Math.Pow(distance / tolerance, 2));
+    }
+
+    private static double BestGridAlignment(double candidate, List<double> detectedBars, double barDuration, double beatDuration)
+    {
+        double best = 0;
+
+        foreach (double gridStart in detectedBars.Take(20))
+        {
+            double score = GridAlignment(
+                candidate,
+                gridStart,
+                barDuration,
+                beatDuration);
+
+            best = Math.Max(best, score);
+        }
+
+        return best;
     }
 
     private static double LocalPeak(double[] values, int index, int radius)
@@ -420,68 +434,4 @@ public static class GlobalMusicalAlignment
 
         return (double)matches / expectedPoints;
     }
-
-    //private static double CalculateFutureConsistency(
-    //double candidate,
-    //List<double> detectedBars,
-    //double phraseDuration)
-    //{
-    //    double totalScore = 0;
-
-    //    int expectedBars = 32;
-
-    //    for (int i = 1; i <= expectedBars; i++)
-    //    {
-    //        double expected =
-    //            candidate + i * phraseDuration;
-
-    //        double distance =
-    //            detectedBars.Min(
-    //                x => Math.Abs(x - expected));
-
-
-    //        // Perfect match
-    //        if (distance < phraseDuration * 0.10)
-    //        {
-    //            totalScore += 1.0;
-    //        }
-    //        // Small musical deviation
-    //        else if (distance < phraseDuration * 0.30)
-    //        {
-    //            totalScore += 0.5;
-    //        }
-    //        // Probably a broken phrase
-    //        else
-    //        {
-    //            totalScore += 0.0;
-    //        }
-    //    }
-
-    //    return totalScore / expectedBars;
-    //}
-
-    //private static double CalculateFutureConsistency(double candidate, List<double> detectedBars, double phraseDuration)
-    //{
-    //    int matches = 0;
-    //    int total = 0;
-
-    //    for (int i = 1; i <= 16; i++)
-    //    {
-    //        double expected =
-    //            candidate + i * phraseDuration;
-
-    //        double closest =
-    //            detectedBars.Min(
-    //                x => Math.Abs(x - expected));
-
-    //        if (closest < phraseDuration * 0.15)
-    //            matches++;
-
-    //        total++;
-    //    }
-
-    //    return total == 0
-    //        ? 0
-    //        : (double)matches / total;
-    //}
 }
