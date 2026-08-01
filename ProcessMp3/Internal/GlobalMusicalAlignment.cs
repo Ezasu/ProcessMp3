@@ -122,16 +122,16 @@ public static class GlobalMusicalAlignment
             double repeatContribution = options.RepeatWeight * repeat;
             double silenceContribution = 0.02 * silencePenalty;
 
-            if (options.DebugOutput)
-            {
-                Console.WriteLine(
-                $"candidate={candidate:F3} " +
-                $"beat={beatContribution:F3} " +
-                $"onset={onsetContribution:F3} " +
-                $"boundary={boundaryContribution:F3} " +
-                $"repeat={repeatContribution:F3} " +
-                $"silence=-{silenceContribution:F3}");
-            }
+            //if (options.DebugOutput)
+            //{
+            //    Console.WriteLine(
+            //    $"candidate={candidate:F3} " +
+            //    $"beat={beatContribution:F3} " +
+            //    $"onset={onsetContribution:F3} " +
+            //    $"boundary={boundaryContribution:F3} " +
+            //    $"repeat={repeatContribution:F3} " +
+            //    $"silence=-{silenceContribution:F3}");
+            //}
 
             double rawScore =
                 options.BeatWeight * beatAlignment +
@@ -166,22 +166,22 @@ public static class GlobalMusicalAlignment
                     - startPenalty;
 
 
-                if (options.DebugOutput)
-                {
+                //if (options.DebugOutput)
+                //{
 
-                    Console.WriteLine(
-                        $"Alignment candidate {candidate:F3}s: " +
-                        $"score={total:F3}, " +
-                        $"beat={beatAlignment:F3}, " +
-                        $"onset={onset:F3}, " +
-                        $"boundary={boundary:F3}, " +
-                        $"repeat={repeat:F3}, " +
-                        $"future={futureConsistency:F3}" +
-                        $"future={futureConsistency:F3}, " +
-                        $"delayPenalty={startPenalty:F3}" +
-                        $"detected first bar={detectedBars[0]:F3}" +
-                        $"BeatWeight = {options.BeatWeight}");
-                }
+                //    Console.WriteLine(
+                //        $"Alignment candidate {candidate:F3}s: " +
+                //        $"score={total:F3}, " +
+                //        $"beat={beatAlignment:F3}, " +
+                //        $"onset={onset:F3}, " +
+                //        $"boundary={boundary:F3}, " +
+                //        $"repeat={repeat:F3}, " +
+                //        $"future={futureConsistency:F3}" +
+                //        $"future={futureConsistency:F3}, " +
+                //        $"delayPenalty={startPenalty:F3}" +
+                //        $"detected first bar={detectedBars[0]:F3}" +
+                //        $"BeatWeight = {options.BeatWeight}");
+                //}
             }
 
             var score = new CandidateScore(
@@ -198,33 +198,47 @@ public static class GlobalMusicalAlignment
 
             scores.Add(score);
 
-            if (options.DebugOutput)
-            {
-                Console.WriteLine(
-                    $"Alignment candidate {score.OffsetSeconds:F3}s: " +
-                    $"total={score.TotalScore:F3}, " +
-                    $"raw={score.RawScore:F3}, " +
-                    $"future={score.FutureConsistency:F3}, " +
-                    $"delay={score.DelayPenalty:F3}, " +
-                    $"beat={score.BeatAlignment:F3}, " +
-                    $"onset={score.OnsetStrength:F3}, " +
-                    $"boundary={score.BoundaryStrength:F3}, " +
-                    $"repeat={score.RepeatedSimilarity:F3}, " +
-                    $"silence={score.SilencePenalty:F3}");
-            }
+            //if (options.DebugOutput)
+            //{
+            //    Console.WriteLine(
+            //        $"Alignment candidate {score.OffsetSeconds:F3}s: " +
+            //        $"total={score.TotalScore:F3}, " +
+            //        $"raw={score.RawScore:F3}, " +
+            //        $"future={score.FutureConsistency:F3}, " +
+            //        $"delay={score.DelayPenalty:F3}, " +
+            //        $"beat={score.BeatAlignment:F3}, " +
+            //        $"onset={score.OnsetStrength:F3}, " +
+            //        $"boundary={score.BoundaryStrength:F3}, " +
+            //        $"repeat={score.RepeatedSimilarity:F3}, " +
+            //        $"silence={score.SilencePenalty:F3}");
+            //}
         }
 
         CandidateScore winner = scores.MaxBy(score => score.TotalScore)!;
         if (options.DebugOutput)
         {
             Console.WriteLine($"Alignment anchor: {anchor:F3} s");
-            foreach (var score in scores)
+
+            foreach (var score in scores
+                .Where(s =>
+                    Math.Abs(s.OffsetSeconds - winner.OffsetSeconds) < 0.02 ||
+                    Math.Abs(s.OffsetSeconds - 3.528) < 0.02))
             {
-                Console.WriteLine($"Alignment candidate {score.OffsetSeconds:F3} s: score={score.TotalScore:F3}, " +
-                    $"beat={score.BeatAlignment:F3}, onset={score.OnsetStrength:F3}, " +
-                    $"boundary={score.BoundaryStrength:F3}, repeat={score.RepeatedSimilarity:F3}, " +
-                    $"silencePenalty={score.SilencePenalty:F3}");
+                Console.WriteLine(
+                    $"candidate={score.OffsetSeconds:F3} " +
+                    $"total={score.TotalScore:F3} " +
+                    $"raw={score.RawScore:F3} " +
+                    $"future={score.FutureConsistency:F3} " +
+                    $"delay={score.DelayPenalty:F3} " +
+                    $"beat={score.BeatAlignment:F3} " +
+                    $"onset={score.OnsetStrength:F3} " +
+                    $"boundary={score.BoundaryStrength:F3} " +
+                    $"repeat={score.RepeatedSimilarity:F3} " +
+                    $"detected first bar={detectedBars[0]:F3}" +
+                    $"BeatWeight = {options.BeatWeight}" +
+                    $"silence={score.SilencePenalty:F3}");
             }
+
             Console.WriteLine($"Alignment selected offset: {winner.OffsetSeconds:F3} s");
         }
 
