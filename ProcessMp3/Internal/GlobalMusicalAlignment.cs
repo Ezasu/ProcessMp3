@@ -53,7 +53,9 @@ public static class GlobalMusicalAlignment
         double OnsetStrength,
         double BoundaryStrength,
         double RepeatedSimilarity,
-        double SilencePenalty);
+        double SilencePenalty,
+        double FutureConsistency,
+        double DelayPenalty);
 
     public record AlignmentResult(
         double OffsetSeconds,
@@ -129,6 +131,7 @@ public static class GlobalMusicalAlignment
             double total = rawScore;
 
             double futureConsistency = 0;
+            double startPenalty = 0;
 
             if (options.EnableFutureConsistency)
             {
@@ -140,7 +143,7 @@ public static class GlobalMusicalAlignment
                         options.MaxStructuralExceptions);
 
 
-                double startPenalty =
+                startPenalty =
                     candidate * options.StartPenaltyWeight;
 
 
@@ -168,7 +171,18 @@ public static class GlobalMusicalAlignment
             }
 
             //double total = 0.30 * beatAlignment + 0.25 * onset + 0.25 * boundary + 0.20 * repeat - 0.15 * silencePenalty;
-            scores.Add(new CandidateScore(candidate, total, beatAlignment, onset, boundary, repeat, silencePenalty));
+            //scores.Add(new CandidateScore(candidate, total, beatAlignment, onset, boundary, repeat, silencePenalty));
+            scores.Add(
+                new CandidateScore(
+                    candidate,
+                    total,
+                    beatAlignment,
+                    onset,
+                    boundary,
+                    repeat,
+                    silencePenalty,
+                    futureConsistency,
+                    startPenalty));
 
             //if (options.PrintScoreBreakdown)
             //{
